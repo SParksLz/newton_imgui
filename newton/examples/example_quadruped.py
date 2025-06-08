@@ -25,16 +25,35 @@
 
 import numpy as np
 import warp as wp
+import pyglet
+import imgui
+from imgui.integrations.pyglet import create_renderer
+
+# from imgui.integrations.pyglet import PygletRenderer
+
 
 import newton
 import newton.collision
 import newton.core.articulation
 import newton.examples
 import newton.utils
+import SparksRenderer as sr
+
+from warp.render import OpenGLRenderer, UsdRenderer
+#
+# def show_gui() :
+#
+#     imgui.begin("you first window", True)
+#     imgui.text("Hello world")
+#     imgui.end()
+
+
+
 
 
 class Example:
     def __init__(self, stage_path="example_quadruped.usd", num_envs=8):
+
         articulation_builder = newton.ModelBuilder()
         articulation_builder.default_body_armature = 0.01
         articulation_builder.default_joint_cfg.armature = 0.01
@@ -79,7 +98,9 @@ class Example:
         # self.solver = newton.solvers.SemiImplicitSolver(self.model)
 
         if stage_path:
-            self.renderer = newton.utils.SimRendererOpenGL(self.model, stage_path)
+            # self.renderer = newton.utils.SimRendererOpenGL(self.model, stage_path)
+            self.renderer = sr.SimRendererNewOpenGL(self.model, stage_path)
+
         else:
             self.renderer = None
 
@@ -148,3 +169,6 @@ if __name__ == "__main__":
 
         if example.renderer:
             example.renderer.save()
+
+        # example.renderer.window.window
+

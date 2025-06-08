@@ -1,0 +1,42 @@
+name: Newton
+channels:
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h2bbff1b_6
+  - ca-certificates=2025.2.25=haa95532_0
+  - expat=2.7.1=h8ddb27b_0
+  - libffi=3.4.4=hd77b12b_1
+  - openssl=3.0.16=h3f729d1_0
+  - pip=25.1=pyhc872135_2
+  - python=3.11.13=h981015d_0
+  - setuptools=78.1.1=py311haa95532_0
+  - sqlite=3.45.3=h2bbff1b_0
+  - tk=8.6.14=h5e9d12e_1
+  - tzdata=2025b=h04d1e81_0
+  - vc=14.42=haa95532_5
+  - vs2015_runtime=14.42.34433=hbfb602d_5
+  - wheel=0.45.1=py311haa95532_0
+  - xz=5.6.4=h4754444_1
+  - zlib=1.2.13=h8cc25b3_1
+  - pip:
+      - absl-py==2.3.0
+      - cocos2d==0.6.10
+      - cython==0.29.37
+      - etils==1.12.2
+      - fsspec==2025.5.1
+      - glfw==2.9.0
+      - imgui==2.0.0
+      - importlib-resources==6.5.2
+      - mujoco==3.3.3.dev767518801
+      - mujoco-warp==0.0.1
+      - numpy==2.3.0rc1
+      - pybind11==2.13.6
+      - pygame==2.6.1
+      - pyglet==2.1.6
+      - pyopengl==3.1.9
+      - pysdl2==0.9.17
+      - six==1.17.0
+      - typing-extensions==4.14.0
+      - warp-lang==1.8.0.dev20250606
+      - zipp==3.22.0
+prefix: E:\conda\envs\Newton
