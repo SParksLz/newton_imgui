@@ -14,11 +14,14 @@
 # limitations under the License.
 
 ###########################################################################
-# Loads a MuJoCo model from MJCF into Newton and simulates it using the
-# MuJoCo solver.
+# Example Sim G1
+#
+# Shows how to set up a simulation of a rigid-body humanoid articulation
+# from a xml using the newton.ModelBuilder().
+# Note this example does not include a trained policy.
 ###########################################################################
 
-import numpy as np
+
 import warp as wp
 
 import newton
@@ -29,72 +32,87 @@ wp.config.enable_backward = False
 
 
 class Example:
-    def __init__(self, stage_path="example_mjc.usda", num_envs=8):
+    def __init__(self, stage_path="example_g1.usd", num_envs=8):
         self.num_envs = num_envs
-
-        use_mujoco = False
-
-        # set numpy random seed
-        self.seed = 123
-        self.rng = np.random.default_rng(self.seed)
-
-        start_rot = wp.quat_from_axis_angle(wp.normalize(wp.vec3(*self.rng.uniform(-1.0, 1.0, size=3))), -wp.pi * 0.5)
-
-        mjcf_filename = newton.examples.get_asset("nv_humanoid.xml")
-
+        self.use_mujoco = True
         articulation_builder = newton.ModelBuilder()
+        # stage_info = newton.utils.parse_usd(
+        #     newton.examples.get_asset("envs/example_g1.usd"),
+        #     articulation_builder,
+        #     root_path="/g1_29dof_with_hand_rev_1_0",
+        #     collapse_fixed_joints=False,
+        #     enable_self_collisions=False,
+        # )
+        # up_axis = stage_info.get("up_axis") or newton.Axis.Z
+
+        asset_path = newton.utils.download_asset("g1_description")
 
         newton.utils.parse_mjcf(
-            mjcf_filename,
+            str(asset_path / "g1_29dof_with_hand_rev_1_0.xml"),
             articulation_builder,
-            ignore_names=["floor", "ground"],
+            collapse_fixed_joints=True,
+            # ignore_names=["floor", "ground"],
             up_axis="Z",
         )
-
-        # joint initial positions
-        articulation_builder.joint_q[:7] = [0.0, 0.0, 1.5, *start_rot]
+        start_rot = wp.quat_from_axis_angle(wp.normalize(wp.vec3(1, 0, 0)), -wp.pi * 0.0)
+        articulation_builder.joint_q[2] = 1.0  # base x]
+        articulation_builder.joint_q[3:7] = [*start_rot]
 
         spacing = 3.0
         sqn = int(wp.ceil(wp.sqrt(float(self.num_envs))))
 
         builder = newton.ModelBuilder()
         for i in range(self.num_envs):
-            pos = wp.vec3((i % sqn) * spacing, (i // sqn) * spacing, 0.0)
-            articulation_builder.joint_q[7:] = self.rng.uniform(
-                -1.0, 1.0, size=(len(articulation_builder.joint_q) - 7,)
-            ).tolist()
+            pos = wp.vec3((i % sqn) * spacing, 2, (i // sqn) * spacing)
             builder.add_builder(articulation_builder, xform=wp.transform(pos, wp.quat_identity()))
         builder.add_ground_plane()
 
         self.sim_time = 0.0
-        fps = 60
+        fps = 600
         self.frame_dt = 1.0 / fps
 
-        self.sim_substeps = 10
+        self.sim_substeps = 5
         self.sim_dt = self.frame_dt / self.sim_substeps
 
         # finalize model
         self.model = builder.finalize()
+        # self.model.rigid_contact_max = 1204*128
 
         self.control = self.model.control()
-
-        self.solver = newton.solvers.MuJoCoSolver(
-            self.model,
-            use_mujoco=use_mujoco,
-            solver="newton",
-            integrator="euler",
-            iterations=10,
-            ls_iterations=5,
-        )
+        # self.solver = newton.solvers.FeatherstoneSolver(self.model)
+        # self.solver = newton.solvers.SemiImplicitSolver(self.model, joint_attach_kd=100, joint_attach_ke= 1000)
+        if self.use_mujoco:
+            self.solver = newton.solvers.MuJoCoSolver(
+                self.model,
+                use_mujoco=False,
+                solver="newton",
+                integrator="euler",
+                iterations=5,
+                ls_iterations=5,
+                nefc_per_env=1,
+            )
+        else:
+            self.solver = newton.solvers.XPBDSolver(self.model, iterations=20)
 
         self.renderer = None
+
         if stage_path:
             self.renderer = newton.utils.SimRendererOpenGL(
-                path=stage_path, model=self.model, scaling=1.0, show_joints=True
+                path=stage_path,
+                model=self.model,
+                scaling=1.0,
+                up_axis=str(newton.Axis.Z),
+                screen_width=1280,
+                screen_height=720,
+                camera_pos=(0, 1, 4),
             )
 
         self.state_0, self.state_1 = self.model.state(), self.model.state()
 
+        newton.sim.eval_fk(self.model, self.model.joint_q, self.model.joint_qd, self.state_0)
+        self.contacts = None
+        if not self.use_mujoco:
+            self.contacts = self.model.collide(self.state_0)
         self.use_cuda_graph = not getattr(self.solver, "use_mujoco", False) and wp.get_device().is_cuda
 
         if self.use_cuda_graph:
@@ -103,12 +121,15 @@ class Example:
             self.graph = capture.graph
 
     def simulate(self):
+        if not self.use_mujoco:
+            self.contacts = self.model.collide(self.state_0)
         for _ in range(self.sim_substeps):
-            self.solver.step(self.model, self.state_0, self.state_1, self.control, None, self.sim_dt)
+            self.state_0.clear_forces()
+            self.solver.step(self.model, self.state_0, self.state_1, self.control, self.contacts, self.sim_dt)
             self.state_0, self.state_1 = self.state_1, self.state_0
 
     def step(self):
-        with wp.ScopedTimer("step", active=False):
+        with wp.ScopedTimer("step", active=True):
             if self.use_cuda_graph:
                 wp.capture_launch(self.graph)
             else:
@@ -137,7 +158,7 @@ if __name__ == "__main__":
         help="Path to the output USD file.",
     )
     parser.add_argument("--num_frames", type=int, default=12000, help="Total number of frames.")
-    parser.add_argument("--num_envs", type=int, default=9, help="Total number of simulated environments.")
+    parser.add_argument("--num_envs", type=int, default=1, help="Total number of simulated environments.")
 
     args = parser.parse_known_args()[0]
 
@@ -146,7 +167,7 @@ if __name__ == "__main__":
 
         for _ in range(args.num_frames):
             example.step()
-            example.render()
+            # example.render()
 
         if example.renderer:
             example.renderer.save()
