@@ -26,19 +26,18 @@ from .flags import (
     NOTIFY_FLAG_JOINT_PROPERTIES,
     NOTIFY_FLAG_SHAPE_PROPERTIES,
 )
+from .graph_coloring import color_graph, plot_graph
 from .joints import (
     JOINT_BALL,
-    JOINT_COMPOUND,
     JOINT_D6,
     JOINT_DISTANCE,
     JOINT_FIXED,
     JOINT_FREE,
-    JOINT_MODE_FORCE,
+    JOINT_MODE_NONE,
     JOINT_MODE_TARGET_POSITION,
     JOINT_MODE_TARGET_VELOCITY,
     JOINT_PRISMATIC,
     JOINT_REVOLUTE,
-    JOINT_UNIVERSAL,
     get_joint_dof_count,
 )
 from .model import Model
@@ -47,17 +46,15 @@ from .types import ShapeGeometry, ShapeMaterials
 
 __all__ = [
     "JOINT_BALL",
-    "JOINT_COMPOUND",
     "JOINT_D6",
     "JOINT_DISTANCE",
     "JOINT_FIXED",
     "JOINT_FREE",
-    "JOINT_MODE_FORCE",
+    "JOINT_MODE_NONE",
     "JOINT_MODE_TARGET_POSITION",
     "JOINT_MODE_TARGET_VELOCITY",
     "JOINT_PRISMATIC",
     "JOINT_REVOLUTE",
-    "JOINT_UNIVERSAL",
     "NOTIFY_FLAG_BODY_INERTIAL_PROPERTIES",
     "NOTIFY_FLAG_BODY_PROPERTIES",
     "NOTIFY_FLAG_DOF_PROPERTIES",
@@ -72,8 +69,10 @@ __all__ = [
     "ShapeGeometry",
     "ShapeMaterials",
     "State",
+    "color_graph",
     "count_rigid_contact_points",
     "eval_fk",
     "eval_ik",
     "get_joint_dof_count",
+    "plot_graph",
 ]

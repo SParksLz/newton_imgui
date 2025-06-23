@@ -53,8 +53,6 @@
       ~Model.shape_materials
       ~Model.shape_geo
       ~Model.shape_geo_src
-      ~Model.geo_meshes
-      ~Model.geo_sdfs
       ~Model.shape_collision_group
       ~Model.shape_collision_group_map
       ~Model.shape_collision_filter_pairs
@@ -111,10 +109,8 @@
       ~Model.joint_effort_limit
       ~Model.joint_velocity_limit
       ~Model.joint_friction
-      ~Model.dof_to_axis_map
-      ~Model.joint_axis_start
-      ~Model.joint_axis_dim
-      ~Model.joint_axis_mode
+      ~Model.joint_dof_dim
+      ~Model.joint_dof_mode
       ~Model.joint_enabled
       ~Model.joint_limit_lower
       ~Model.joint_limit_upper
@@ -141,7 +137,6 @@
       ~Model.body_count
       ~Model.shape_count
       ~Model.joint_count
-      ~Model.joint_axis_count
       ~Model.tri_count
       ~Model.tet_count
       ~Model.edge_count
